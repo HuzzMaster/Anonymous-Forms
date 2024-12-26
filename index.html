@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>John Burroughs Middle School Anonymous</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 20px;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid #000;
+            margin-top: 20px;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 300px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .char-count {
+            font-size: 14px;
+            color: #555;
+            margin-top: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="font-size: 36px; color: #333; margin-bottom: 20px;">John Burroughs Middle School Anonymous</h1>
+    <h2 style="font-size: 30px; color: #555; margin-bottom: 20px;">Crushes</h2>
+
+    <div class="input-group">
+        <label for="whoInput">Who is your crush?</label>
+        <input type="text" id="whoInput" maxlength="50" placeholder="Enter their name...">
+        <div class="char-count" id="whoCharCount">0/50</div>
+    </div>
+    <div class="input-group">
+        <label for="whyInput">Why do you like them?</label>
+        <input type="text" id="whyInput" maxlength="125" placeholder="Enter the reason...">
+        <div class="char-count" id="whyCharCount">0/125</div>
+    </div>
+    <div class="input-group">
+        <label for="atInput">What's their @ handle?</label>
+        <input type="text" id="atInput" maxlength="50" placeholder="Enter their social handle...">
+        <div class="char-count" id="atCharCount">0/50</div>
+    </div>
+    <button onclick="sendToWebhook()">Enter</button>
+
+    <canvas id="imageCanvas" width="1080" height="1080" style="display: none;"></canvas>
+
+    <script>
+        const webhookURL = 'https://discordapp.com/api/webhooks/1321745533873946645/hp_-yBxuNcFD09YE7U-oXDfRuYA0DQv-svbjmJPyTWz7VUBFJ8GQsSTNBlWDVtAga9M7'; // Replace with your webhook URL
+
+        // Update character count dynamically
+        function updateCharCount(inputId, maxLength, charCountId) {
+            const input = document.getElementById(inputId);
+            const charCount = document.getElementById(charCountId);
+            input.addEventListener('input', () => {
+                charCount.textContent = `${input.value.length}/${maxLength}`;
+            });
+        }
+
+        // Attach character count functionality to inputs
+        updateCharCount('whoInput', 50, 'whoCharCount');
+        updateCharCount('whyInput', 125, 'whyCharCount');
+        updateCharCount('atInput', 50, 'atCharCount');
+
+        // Function to generate an image and send it to the webhook
+        async function sendToWebhook() {
+            const who = document.getElementById('whoInput').value || 'N/A';
+            const why = document.getElementById('whyInput').value || 'N/A';
+            const at = document.getElementById('atInput').value || 'N/A';
+            const canvas = document.getElementById('imageCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Draw the image
+            const backgroundImage = new Image();
+            backgroundImage.crossOrigin = 'Anonymous';
+            backgroundImage.src = 'https://pbs.twimg.com/profile_images/2561415943/zm7zehc5n5rr8n291sch_400x400.jpeg';
+            backgroundImage.onload = async function () {
+                // Draw blurred background
+                ctx.filter = 'blur(15px)';
+                ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+                ctx.filter = 'none';
+
+                // Overlay and text
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#fff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';  // Ensures center alignment both horizontally and vertically
+
+                // 'Crushes' with bubble letters and shadow
+                ctx.font = 'bold 100px Arial'; // Adjusted size for the 1080x1080 canvas
+                ctx.shadowColor = 'black';
+                ctx.shadowBlur = 20; // Adjusted shadow for better visibility
+                ctx.fillText('Crushes', canvas.width / 2, 120); // Vertically centered at top
+
+                // 'Who?' text
+                ctx.font = 'bold 40px Arial';
+                ctx.fillText('Who?', canvas.width / 2, 320);
+
+                ctx.font = '30px Arial';
+                wrapText(ctx, who, canvas.width / 2, 380, 1000, 40);
+
+                // 'Why?' text
+                ctx.font = 'bold 40px Arial';
+                ctx.fillText('Why?', canvas.width / 2, 520);
+                
+                ctx.font = '30px Arial';
+                wrapText(ctx, why, canvas.width / 2, 580, 1000, 40);
+
+                // '@?' text
+                ctx.font = 'bold 40px Arial';
+                ctx.fillText('@?', canvas.width / 2, 720);
+
+                ctx.font = '30px Arial';
+                wrapText(ctx, at, canvas.width / 2, 780, 1000, 40);
+
+                // Convert to blob and send to webhook
+                canvas.toBlob(async (blob) => {
+                    const formData = new FormData();
+                    formData.append('file', blob, 'crush-image.png');
+
+                    await fetch(webhookURL, {
+                        method: 'POST',
+                        body: formData
+                    }).then(response => {
+                        if (response.ok) {
+                            alert('Prompt sent successfully!');
+                        } else {
+                            alert('Failed to send prompt!');
+                        }
+                    }).catch(error => {
+                        console.error('Error sending prompt:', error);
+                        alert('An error occurred!');
+                    });
+                });
+            };
+        }
+
+        // Function to wrap text for canvas drawing
+        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+            const words = text.split(' ');
+            let line = '';
+            for (let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                const metrics = context.measureText(testLine);
+                const testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    context.fillText(line, x, y);
+                    line = words[n] + ' ';
+                    y += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            context.fillText(line, x, y);
+        }
+    </script>
+</body>
+</html>
